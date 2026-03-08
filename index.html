@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOE Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --d-color: #ff6b35;
+    --o-color: #7b61ff;
+    --e-color: #00d4aa;
+    --text: #e8e8f0;
+    --muted: #666680;
+    --card: #13131d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(123,97,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(123,97,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 60px 24px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 80px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .header .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(52px, 8vw, 90px);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+  }
+
+  .header h1 .d { color: var(--d-color); }
+  .header h1 .o { color: var(--o-color); }
+  .header h1 .e { color: var(--e-color); }
+
+  .header .subtitle {
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Main layers */
+  .layers {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 80px;
+  }
+
+  .layer {
+    border: 1px solid var(--border);
+    background: var(--card);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .layer:nth-child(1) { animation-delay: 0.1s; }
+  .layer:nth-child(2) { animation-delay: 0.2s; }
+  .layer:nth-child(3) { animation-delay: 0.3s; }
+
+  .layer::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    transition: width 0.3s ease;
+  }
+
+  .layer.d::before { background: var(--d-color); }
+  .layer.o::before { background: var(--o-color); }
+  .layer.e::before { background: var(--e-color); }
+
+  .layer:hover::before, .layer.active::before { width: 6px; }
+
+  .layer:hover, .layer.active {
+    border-color: rgba(255,255,255,0.1);
+    transform: translateX(4px);
+  }
+
+  .layer.d:hover, .layer.d.active { box-shadow: 0 0 40px rgba(255,107,53,0.08); }
+  .layer.o:hover, .layer.o.active { box-shadow: 0 0 40px rgba(123,97,255,0.08); }
+  .layer.e:hover, .layer.e.active { box-shadow: 0 0 40px rgba(0,212,170,0.08); }
+
+  .layer-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 32px;
+  }
+
+  .layer-letter {
+    font-family: 'Syne', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .layer.d .layer-letter { color: var(--d-color); }
+  .layer.o .layer-letter { color: var(--o-color); }
+  .layer.e .layer-letter { color: var(--e-color); }
+
+  .layer-info { flex: 1; }
+
+  .layer-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .layer-role {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .layer-icon {
+    font-size: 28px;
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  .layer-body {
+    display: none;
+    padding: 0 32px 28px 32px;
+    padding-left: calc(32px + 4px + 68px);
+  }
+
+  .layer.active .layer-body { display: block; animation: fadeIn 0.3s ease; }
+
+  .layer-desc {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tag-item {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  .layer.d .tag-item { background: rgba(255,107,53,0.1); color: var(--d-color); border: 1px solid rgba(255,107,53,0.2); }
+  .layer.o .tag-item { background: rgba(123,97,255,0.1); color: var(--o-color); border: 1px solid rgba(123,97,255,0.2); }
+  .layer.e .tag-item { background: rgba(0,212,170,0.1); color: var(--e-color); border: 1px solid rgba(0,212,170,0.2); }
+
+  /* Divider */
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease 0.4s both;
+  }
+
+  /* PTMRO Loop */
+  .ptmro {
+    margin-bottom: 80px;
+    animation: fadeUp 0.6s ease 0.5s both;
+  }
+
+  .ptmro-ring {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .ptmro-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    flex: 1;
+    min-width: 100px;
+    transition: all 0.3s;
+    cursor: default;
+    position: relative;
+  }
+
+  .ptmro-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 16px;
+    z-index: 2;
+  }
+
+  .ptmro-step:hover {
+    background: #1a1a28;
+    border-color: rgba(123,97,255,0.3);
+  }
+
+  .ptmro-letter {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--o-color);
+    line-height: 1;
+  }
+
+  .ptmro-name {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Heuristics */
+  .heuristics {
+    margin-bottom: 80px;
+    animation: fadeUp 0.6s ease 0.6s both;
+  }
+
+  .heuristic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+    margin-top: 16px;
+  }
+
+  .heuristic {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 20px;
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  .heuristic::before {
+    content: attr(data-n);
+    font-family: 'Syne', sans-serif;
+    font-size: 60px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.02);
+    position: absolute;
+    top: -10px; right: 10px;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .heuristic:hover { border-color: rgba(255,255,255,0.1); }
+
+  .heuristic-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .heuristic-text {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* Errors table */
+  .errors {
+    animation: fadeUp 0.6s ease 0.7s both;
+    margin-bottom: 60px;
+  }
+
+  .error-grid {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .error-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 2px;
+  }
+
+  .error-cause {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px;
+    font-size: 12px;
+    color: #ff6b6b;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+  }
+
+  .error-fix {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @media (max-width: 600px) {
+    .layer-header { padding: 18px 20px; gap: 14px; }
+    .layer-body { padding: 0 20px 20px 20px; padding-left: calc(20px + 14px + 56px); }
+    .layer-letter { font-size: 36px; }
+    .ptmro-step { padding: 14px 10px; }
+    .error-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <span class="tag">Framework de Arquitetura Agêntica</span>
+    <h1><span class="d">D</span><span class="o">O</span><span class="e">E</span></h1>
+    <p class="subtitle">Directive · Orchestration · Execution</p>
+  </div>
+
+  <!-- Main Layers -->
+  <div class="section-label">// Camadas do framework</div>
+  <div class="layers">
+
+    <div class="layer d" onclick="toggle(this)">
+      <div class="layer-header">
+        <div class="layer-letter">D</div>
+        <div class="layer-info">
+          <div class="layer-name">Directive</div>
+          <div class="layer-role">O Cérebro Estratégico → "O quê"</div>
+        </div>
+        <div class="layer-icon">📋</div>
+      </div>
+      <div class="layer-body">
+        <p class="layer-desc">
+          Arquivos Markdown (.md) que funcionam como SOPs — Procedimentos Operacionais Padrão.
+          Definem objetivos, entradas, passos e critérios de sucesso em linguagem natural.
+          É o "playbook" da empresa: a IA lê isso primeiro antes de qualquer coisa.
+        </p>
+        <div class="tags">
+          <span class="tag-item">agents.md</span>
+          <span class="tag-item">SOPs em linguagem natural</span>
+          <span class="tag-item">Critérios de sucesso</span>
+          <span class="tag-item">/directives folder</span>
+          <span class="tag-item">PRD como input</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer o" onclick="toggle(this)">
+      <div class="layer-header">
+        <div class="layer-letter">O</div>
+        <div class="layer-info">
+          <div class="layer-name">Orchestration</div>
+          <div class="layer-role">O Gerente de Projeto → "Quando e como"</div>
+        </div>
+        <div class="layer-icon">🧠</div>
+      </div>
+      <div class="layer-body">
+        <p class="layer-desc">
+          O modelo de IA (Claude, Gemini, GPT) atuando como gerente: decide a ordem das tarefas,
+          qual ferramenta usar, coordena o fluxo baseado nas diretivas. Responsável por roteamento
+          e julgamento — não pelo trabalho pesado. Pode ser trocado sem reconstruir a infraestrutura.
+        </p>
+        <div class="tags">
+          <span class="tag-item">Roteamento inteligente</span>
+          <span class="tag-item">Chama ferramentas MCP</span>
+          <span class="tag-item">Loop PTMRO</span>
+          <span class="tag-item">Independente do modelo</span>
+          <span class="tag-item">Coordena subagentes</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer e" onclick="toggle(this)">
+      <div class="layer-header">
+        <div class="layer-letter">E</div>
+        <div class="layer-info">
+          <div class="layer-name">Execution</div>
+          <div class="layer-role">As Mãos Determinísticas → "Como, de verdade"</div>
+        </div>
+        <div class="layer-icon">⚙️</div>
+      </div>
+      <div class="layer-body">
+        <p class="layer-desc">
+          Scripts Python atômicos que realizam o trabalho pesado de forma repetível e sem alucinações.
+          Chamadas de API, processamento de dados, envio de e-mails — tudo que precisa ser
+          determinístico fica aqui. A IA decide o que fazer; o Python faz de fato.
+        </p>
+        <div class="tags">
+          <span class="tag-item">Scripts Python atômicos</span>
+          <span class="tag-item">Sem alucinações</span>
+          <span class="tag-item">/executions folder</span>
+          <span class="tag-item">Chamadas de API</span>
+          <span class="tag-item">Self-annealing</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PTMRO Loop -->
+  <div class="ptmro">
+    <div class="section-label">// Loop interno do agente: PTMRO</div>
+    <div class="ptmro-ring">
+      <div class="ptmro-step">
+        <div class="ptmro-letter">P</div>
+        <div class="ptmro-name">Planning</div>
+      </div>
+      <div class="ptmro-step">
+        <div class="ptmro-letter">T</div>
+        <div class="ptmro-name">Tools</div>
+      </div>
+      <div class="ptmro-step">
+        <div class="ptmro-letter">M</div>
+        <div class="ptmro-name">Memory</div>
+      </div>
+      <div class="ptmro-step">
+        <div class="ptmro-letter">R</div>
+        <div class="ptmro-name">Reflection</div>
+      </div>
+      <div class="ptmro-step">
+        <div class="ptmro-letter">O</div>
+        <div class="ptmro-name">Orchestration</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Heuristics -->
+  <div class="heuristics">
+    <div class="section-label">// Heurísticas de decisão</div>
+    <div class="heuristic-grid">
+      <div class="heuristic" data-n="01">
+        <div class="heuristic-title">Regra 10x</div>
+        <div class="heuristic-text">Só otimize se houver caminho claro para tornar o fluxo 10x melhor em tempo, custo ou precisão.</div>
+      </div>
+      <div class="heuristic" data-n="02">
+        <div class="heuristic-title">Human-in-the-Loop</div>
+        <div class="heuristic-text">Alta magnitude financeira ou alta sensibilidade de qualidade → sempre inclua revisão humana.</div>
+      </div>
+      <div class="heuristic" data-n="03">
+        <div class="heuristic-title">Alavancagem Horizontal</div>
+        <div class="heuristic-text">Automatizar 90% de 10.000 micro-tarefas vale mais do que 100% de um único cargo complexo.</div>
+      </div>
+      <div class="heuristic" data-n="04">
+        <div class="heuristic-title">Limite de Paralelização</div>
+        <div class="heuristic-text">Ponto ideal: 2–3 agentes simultâneos. Acima de 4, o ganho é anulado pela sobrecarga de atenção.</div>
+      </div>
+      <div class="heuristic" data-n="05">
+        <div class="heuristic-title">Densidade de Prompt</div>
+        <div class="heuristic-text">Remova saudações e palavras inúteis. Prompts mais curtos e densos geram saídas melhores.</div>
+      </div>
+      <div class="heuristic" data-n="06">
+        <div class="heuristic-title">Vibe Coding</div>
+        <div class="heuristic-text">Se você está editando código manualmente, está errado. Aja como CEO: dê ordens, a IA executa.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Common Errors -->
+  <div class="errors">
+    <div class="section-label">// Erros comuns e como evitá-los</div>
+    <div class="error-grid">
+      <div class="error-row">
+        <div class="error-cause">Poluição de Contexto</div>
+        <div class="error-fix">Use subagentes em janelas isoladas. Compacte históricos longos.</div>
+      </div>
+      <div class="error-row">
+        <div class="error-cause">Execução Probabilística</div>
+        <div class="error-fix">IA decide (orquestração), Python executa (determinístico). Nunca misture.</div>
+      </div>
+      <div class="error-row">
+        <div class="error-cause">Segredos Expostos</div>
+        <div class="error-fix">Sempre use .env para chaves de API. Instrua a IA a nunca alterar esse arquivo.</div>
+      </div>
+      <div class="error-row">
+        <div class="error-cause">Token Burn</div>
+        <div class="error-fix">Carregue apenas servidores MCP estritamente necessários para a tarefa.</div>
+      </div>
+      <div class="error-row">
+        <div class="error-cause">Falta de PRD</div>
+        <div class="error-fix">Erros no início se multiplicam exponencialmente. Planejamento humano é obrigatório.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    DOE FRAMEWORK · ARQUITETURA AGÊNTICA · CLIQUE NAS CAMADAS PARA EXPANDIR
+  </div>
+
+</div>
+
+<script>
+function toggle(el) {
+  const wasActive = el.classList.contains('active');
+  document.querySelectorAll('.layer').forEach(l => l.classList.remove('active'));
+  if (!wasActive) el.classList.add('active');
+}
+</script>
+</body>
+</html>
